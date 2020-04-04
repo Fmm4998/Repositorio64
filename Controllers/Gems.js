@@ -1,3 +1,4 @@
+// esta parte fue donde se llevo mas tiempo la programacion pues es la parte que tiene que quedar mejor.
 module.exports = {
     getGems,
     getGemsPagination,
@@ -8,14 +9,15 @@ module.exports = {
     uploadPhotos,
     updateGemWithImages,
 }
-
+//npm
 const GemsSub = require('../Models/Gems')
 const mongoose = require('mongoose')
 const meteorID = require('meteor-mongo-id')
 const Random = require('meteor-random')
 const cloudinary = require('cloudinary').v2
 const fs = require('fs')
-
+// aqui se agregan credenciales para subir imagenes a la nube
+// esta herramienta es buena pues nos permite subir archivos multimedia a la nube
 cloudinary.config({
    
 })
@@ -67,6 +69,7 @@ function getGem(req, res) {
 }
 
 function createGem(req, res) {
+    // propiedades para las gemas se utilzan en postman es importante tener en cuenta esto.
     let gem = req.body
     let g = {
 
@@ -131,8 +134,7 @@ function updateGemWithImages(_id, img) {
 
 function deleteGem(req, res) {
     const conceptID = req.body._id
-
-
+    
     GemsSub.remove({ _id: conceptID }, (err, concept) => {
         if (err) return res.status(500).send({ message: `Problem with the searching request ${err}` })
         res.status(200).send({ message: `Delete Successfull`, gem: concept })
@@ -143,6 +145,7 @@ function deleteGem(req, res) {
 function uploadPhotos(req, res) {
 
     const path = req.files.file.path
+    const gemID = req.body._id
     console.log(typeof path)
     const uniqueFilename = Random.id()
     fs.readFile(path, function (err, data) {
@@ -151,11 +154,17 @@ function uploadPhotos(req, res) {
         tags: `gemsImages`},
         (err, result)=> {
                 console.log(result);
+                let routeImg = result.url
+                let arrayRoute = routeImg.split("/")
+                let finalUrl = arrayRoute[6] + "/" + arrayRoute[7] + "/" + arrayRoute[8]
+                console.log("finalUrl", finalUrl)
+                //acortar url
             if(err) return res.status(500).send(err)
             fs.unlinkSync(path)
-            updateGemWithImages()
+            updateGemWithImages(gemID,finalUrl)
             res.status(200).send({message: "upload image sucess",
             imageData: result})
+            // esta es la parte mas importante a mi parecer pues aqui subimos imagenes
         
         })
     })
@@ -165,6 +174,7 @@ function uploadPhotos(req, res) {
 }
 
 function formatDateName(now) {
+    // obtener la fecha y hora exactas.
     let year = now.getFullYear()
     let month = now.getMonth() < 9 ? `0${now.getMonth() + 1}` : now.getMonth() + 1
     let day = now.getDate() < 10 ? `0${now.getDate()}` : now.getDate()
